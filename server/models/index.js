@@ -3,7 +3,7 @@ const { Sequelize } = require('sequelize');
 // 数据库配置
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: './database.sqlite',
+  storage: process.env.DATABASE_PATH || './database.sqlite',
   logging: false,
   define: {
     timestamps: true,

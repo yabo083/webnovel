@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const rateLimit = require('express-rate-limit');
 const db = require('./models');
 
@@ -19,10 +20,30 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// 路由
+// API路由
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/novels', require('./routes/novels'));
 app.use('/api/chapters', require('./routes/chapters'));
+
+// 健康检查端点
+app.get('/api/auth/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// 生产环境下提供静态文件服务
+if (process.env.NODE_ENV === 'production') {
+  // 提供前端静态文件
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+  
+  // 处理前端路由，返回index.html
+  app.get('*', (req, res) => {
+    // 排除API路由
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({ message: 'API endpoint not found' });
+    }
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+}
 
 // 错误处理中间件
 app.use((err, req, res, next) => {

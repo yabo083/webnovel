@@ -1,0 +1,42 @@
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn
+
+# 本地数据库文件
+server/database.sqlite
+
+# 开发文件
+.git
+.gitignore
+README.md
+.env.local
+.env.development
+.env.test
+
+# 编辑器文件
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+logs
+*.log
+
+# 临时文件
+tmp
+temp
+.tmp
+
+# 构建产物（会在容器内重新构建）
+client/dist
+client/node_modules
+server/node_modules 
