@@ -30,12 +30,41 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: '服务器内部错误' });
 });
 
-// 数据库同步并启动服务器
-db.sequelize.sync({ alter: true }).then(() => {
-  console.log('数据库连接成功');
+// 数据库同步并启动服务器 - 改进版本，避免约束冲突
+const initDatabase = async () => {
+  try {
+    // 首次尝试正常同步
+    await db.sequelize.sync({ 
+      force: false,
+      alter: false,  // 禁用自动修改表结构，避免约束冲突
+      logging: false 
+    });
+    console.log('数据库连接成功');
+  } catch (err) {
+    console.error('数据库同步失败:', err.message);
+    
+    // 如果是约束错误，强制重建数据库
+    if (err.name === 'SequelizeUniqueConstraintError' || 
+        err.message.includes('UNIQUE constraint failed') ||
+        err.message.includes('constraint failed')) {
+      console.log('检测到约束冲突，正在重建数据库...');
+      try {
+        await db.sequelize.sync({ force: true, logging: false });
+        console.log('数据库重建成功');
+      } catch (rebuildErr) {
+        console.error('数据库重建失败:', rebuildErr.message);
+        process.exit(1);
+      }
+    } else {
+      console.error('无法解决的数据库错误');
+      process.exit(1);
+    }
+  }
+  
+  // 启动服务器
   app.listen(PORT, () => {
     console.log(`服务器运行在端口 ${PORT}`);
   });
-}).catch(err => {
-  console.error('数据库连接失败:', err);
-}); 
+};
+
+initDatabase(); 
