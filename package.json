@@ -4,6 +4,7 @@
   "description": "一个专注于核心码字功能的Web小说写作系统",
   "scripts": {
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "start": "cd server && node server.js",
     "server:dev": "cd server && npm run dev",
     "client:dev": "cd client && npm run dev",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install"
