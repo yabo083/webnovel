@@ -7,16 +7,29 @@
       </el-button>
       <div class="novel-info" v-if="novel">
         <h1>{{ novel.title }}</h1>
+        <p class="novel-description" v-if="novel.description">
+          {{ novel.description }}
+        </p>
+        <p class="novel-description empty" v-else>
+          暂无简介，点击"编辑小说"可以添加简介
+        </p>
         <div class="novel-stats">
           <span>{{ chapters.length }} 章</span>
           <span>{{ formatWords(novel.total_words) }} 字</span>
+          <span>分类：{{ novel.category || '其他' }}</span>
           <span>最后更新：{{ formatDate(novel.last_updated) }}</span>
         </div>
       </div>
-      <el-button type="primary" @click="showCreateChapterDialog = true">
-        <el-icon><Plus /></el-icon>
-        新建章节
-      </el-button>
+      <div class="header-actions">
+        <el-button @click="showEditNovelDialog = true" v-if="novel">
+          <el-icon><Edit /></el-icon>
+          编辑小说
+        </el-button>
+        <el-button type="primary" @click="showCreateChapterDialog = true">
+          <el-icon><Plus /></el-icon>
+          新建章节
+        </el-button>
+      </div>
     </div>
 
     <div class="content">
@@ -62,6 +75,44 @@
       </div>
     </div>
 
+    <!-- 编辑小说对话框 -->
+    <el-dialog 
+      title="编辑小说信息"
+      v-model="showEditNovelDialog"
+      width="500px"
+    >
+      <el-form :model="novelForm" :rules="novelRules" ref="novelFormRef">
+        <el-form-item label="小说标题" prop="title">
+          <el-input v-model="novelForm.title" placeholder="请输入小说标题" />
+        </el-form-item>
+        <el-form-item label="小说简介" prop="description">
+          <el-input 
+            v-model="novelForm.description" 
+            type="textarea" 
+            :rows="4"
+            placeholder="请输入小说简介（可选）"
+          />
+        </el-form-item>
+        <el-form-item label="分类" prop="category">
+          <el-select v-model="novelForm.category" placeholder="请选择分类">
+            <el-option label="玄幻" value="玄幻" />
+            <el-option label="言情" value="言情" />
+            <el-option label="都市" value="都市" />
+            <el-option label="历史" value="历史" />
+            <el-option label="科幻" value="科幻" />
+            <el-option label="其他" value="其他" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <el-button @click="showEditNovelDialog = false">取消</el-button>
+        <el-button type="primary" @click="handleUpdateNovel" :loading="updating">
+          更新
+        </el-button>
+      </template>
+    </el-dialog>
+
     <!-- 创建/编辑章节对话框 -->
     <el-dialog 
       :title="editingChapter ? '编辑章节' : '新建章节'"
@@ -88,6 +139,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Edit } from '@element-plus/icons-vue'
 import api from '../utils/api'
 
 const route = useRoute()
@@ -97,17 +149,32 @@ const novel = ref(null)
 const chapters = ref([])
 const loading = ref(false)
 const showCreateChapterDialog = ref(false)
+const showEditNovelDialog = ref(false)
 const creating = ref(false)
+const updating = ref(false)
 const editingChapter = ref(null)
 const chapterFormRef = ref()
+const novelFormRef = ref()
 
 const chapterForm = reactive({
   title: ''
 })
 
+const novelForm = reactive({
+  title: '',
+  description: '',
+  category: '其他'
+})
+
 const chapterRules = {
   title: [
     { required: true, message: '请输入章节标题', trigger: 'blur' }
+  ]
+}
+
+const novelRules = {
+  title: [
+    { required: true, message: '请输入小说标题', trigger: 'blur' }
   ]
 }
 
@@ -117,6 +184,15 @@ const fetchChapters = async () => {
     const response = await api.get(`/novels/${route.params.id}/chapters`)
     novel.value = response.novel
     chapters.value = response.chapters
+    
+    // 同时获取完整的小说信息
+    const novelResponse = await api.get(`/novels/${route.params.id}`)
+    novel.value = { ...novel.value, ...novelResponse.novel }
+    
+    // 填充编辑表单
+    novelForm.title = novel.value.title || ''
+    novelForm.description = novel.value.description || ''
+    novelForm.category = novel.value.category || '其他'
   } catch (error) {
     console.error('Fetch chapters error:', error)
   } finally {
@@ -182,6 +258,30 @@ const resetForm = () => {
   chapterForm.title = ''
 }
 
+// 更新小说信息
+const handleUpdateNovel = async () => {
+  const valid = await novelFormRef.value.validate().catch(() => false)
+  if (!valid) return
+
+  updating.value = true
+  try {
+    await api.put(`/novels/${route.params.id}`, novelForm)
+    
+    // 更新本地数据
+    novel.value.title = novelForm.title
+    novel.value.description = novelForm.description
+    novel.value.category = novelForm.category
+    
+    showEditNovelDialog.value = false
+    ElMessage.success('小说信息更新成功！')
+  } catch (error) {
+    console.error('Update novel error:', error)
+    ElMessage.error('更新失败，请重试')
+  } finally {
+    updating.value = false
+  }
+}
+
 const formatWords = (count) => {
   if (count < 1000) return `${count}`
   if (count < 10000) return `${(count / 1000).toFixed(1)}千`
@@ -220,6 +320,11 @@ onMounted(() => {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
 .back-button {
   flex-shrink: 0;
 }
@@ -234,11 +339,25 @@ onMounted(() => {
   margin-bottom: 8px;
 }
 
+.novel-description {
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.5;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+
+.novel-description.empty {
+  color: #c0c4cc;
+  font-style: italic;
+}
+
 .novel-stats {
   display: flex;
   gap: 16px;
   font-size: 14px;
   color: #909399;
+  flex-wrap: wrap;
 }
 
 .content {
