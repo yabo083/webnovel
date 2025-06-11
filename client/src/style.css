@@ -1,0 +1,138 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+/* 编辑器样式 */
+.editor-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.editor-toolbar {
+  padding: 16px 20px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.editor-content {
+  padding: 20px;
+}
+
+.editor-title-input {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.editor-text-area {
+  width: 100%;
+  min-height: 500px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  line-height: 1.8;
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* 小说卡片样式 */
+.novel-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.novel-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.novel-cover {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  border-radius: 8px 8px 0 0;
+}
+
+/* 章节列表样式 */
+.chapter-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid #ebeef5;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.chapter-item:hover {
+  background-color: #f8f9fa;
+}
+
+.chapter-item:last-child {
+  border-bottom: none;
+}
+
+.chapter-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #303133;
+}
+
+.chapter-info {
+  font-size: 14px;
+  color: #909399;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .editor-content {
+    padding: 16px;
+  }
+  
+  .editor-toolbar {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* 工具栏样式 */
+.word-count {
+  font-size: 14px;
+  color: #909399;
+}
+
+.save-status {
+  font-size: 14px;
+  color: #67c23a;
+}
+
+.save-status.saving {
+  color: #e6a23c;
+}
+
+.save-status.error {
+  color: #f56c6c;
+} 
