@@ -9,13 +9,14 @@ WORKDIR /app/client
 # 复制前端package文件
 COPY client/package*.json ./
 
-# 安装依赖
-RUN npm ci --only=production && npm cache clean --force
+# 安装所有依赖（包括开发依赖，构建时需要）
+RUN npm ci && npm cache clean --force
 
 # 复制前端源码
 COPY client/ .
 
 # 构建前端应用
+ENV NODE_ENV=production
 RUN npm run build
 
 # ====================================
@@ -29,8 +30,8 @@ WORKDIR /app/server
 # 复制后端package文件
 COPY server/package*.json ./
 
-# 安装后端依赖
-RUN npm ci --only=production && npm cache clean --force
+# 安装后端生产依赖
+RUN npm ci --omit=dev && npm cache clean --force
 
 # ====================================
 # 阶段3: 最终运行镜像
